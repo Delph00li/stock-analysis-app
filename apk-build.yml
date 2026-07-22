@@ -1,0 +1,86 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3-pip \
+            python3-venv \
+            openjdk-17-jdk \
+            libffi-dev \
+            libssl-dev \
+            zlib1g-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            cmake \
+            libgstreamer1.0-dev \
+            git \
+            zip \
+            unzip
+      
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install kivy[full] buildozer
+      
+      - name: Set up Android SDK
+        run: |
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
+          echo 'y' | sdkmanager --licenses 2>/dev/null || true
+      
+      - name: Create spec file
+        run: |
+          cat > stock-app.spec << 'EOF'
+[app]
+title = Stock Analysis
+package.name = stockapp
+package.domain = com.stockanalysis
+source.include_exts = py,png,jpg,kv,atlas
+version = 1.0
+requirements = python3,kivy
+orientation = portrait
+fullscreen = 0
+android.permissions = INTERNET
+android.allow_backup = True
+
+[buildozer]
+log_level = 2
+warn_on_root = 1
+build_dir = ./build
+EOF
+      
+      - name: Build debug APK
+        env:
+          ANDROID_HOME: /opt/android-sdk
+          ANDROID_SDK_ROOT: /opt/android-sdk
+        run: |
+          buildozer android debug --verbose 2>&1 | head -100
+      
+      - name: Upload APK artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stock-analysis-apk
+          path: bin/*.apk
+          retention-days: 7
+      
+      - name: Show APK files
+        run: |
+          ls -la bin/ 2>/dev/null || echo "Build directory not found"
