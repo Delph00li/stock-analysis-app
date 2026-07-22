@@ -38,23 +38,24 @@ jobs:
       
       - name: Create spec file
         run: |
-          cat > stock-app.spec << 'SPECEOF'
-[app]
-title = Stock Analysis
-package.name = stockapp
-package.domain = com.stockanalysis
-source.include_exts = py,png,jpg,kv,atlas
-version = 1.0
-requirements = python3,kivy
-orientation = portrait
-fullscreen = 0
-android.permissions = INTERNET
-android.allow_backup = True
-[buildozer]
-log_level = 2
-warn_on_root = 1
-build_dir = ./build
-SPECEOF
+          cat > stock-app.spec << 'EOF'
+          [app]
+          title = Stock Analysis
+          package.name = stockapp
+          package.domain = com.stockanalysis
+          source.include_exts = py,png,jpg,kv,atlas
+          version = 1.0
+          requirements = python3,kivy
+          orientation = portrait
+          fullscreen = 0
+          android.permissions = INTERNET
+          android.allow_backup = True
+          
+          [buildozer]
+          log_level = 2
+          warn_on_root = 1
+          build_dir = ./build
+          EOF
       
       - name: Build debug APK
         env:
